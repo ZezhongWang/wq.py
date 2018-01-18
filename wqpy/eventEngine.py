@@ -35,7 +35,6 @@ class EventEngine(object):
     def start(self):
         self.__active = True
         self.__thread.start()
-        self.__run()
 
     def stop(self):
         self.__active = False

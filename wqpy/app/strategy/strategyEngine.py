@@ -1,7 +1,6 @@
 from wqpy.app.baseAppEngine import BaseAppEngine
 from wqpy.static.eventType import *
-from threading import Thread
-from datetime import datetime, timedelta
+from wqpy.app.strategy.simulateStrategy import SimulateStrategy
 
 
 class StrategyEngine(BaseAppEngine):
@@ -11,22 +10,24 @@ class StrategyEngine(BaseAppEngine):
         self.__tickStrategyDict = {}
 
     def __run(self):
-        pass
+        self.load_strategy()
+        self.init_all()
+        self.start_all()
 
     def start(self):
-        self.__active = True
-        self.__thread.start()
+        self.active = True
+        self.thread.start()
         self.__run()
 
     def register_event(self):
-        self.__eventEngine.register(EVENT_TICK, self.process_tick_event)
-        self.__eventEngine.register(EVENT_ORDER, self.process_order_event)
-        self.__eventEngine.register(EVENT_TRADE, self.process_trade_event)
-        self.__eventEngine.register(EVENT_FINISH, self.process_trade_event)
+        self.eventEngine.register(EVENT_TICK, self.process_tick_event)
+        self.eventEngine.register(EVENT_ORDER, self.process_order_event)
+        self.eventEngine.register(EVENT_TRADE, self.process_trade_event)
+        self.eventEngine.register(EVENT_FINISH, self.process_trade_event)
 
     def stop(self):
-        self.__active = False
-        self.__thread.join()
+        self.active = False
+        self.thread.join()
 
     def process_tick_event(self, event):
         tick = event.dict_['data']
@@ -60,8 +61,42 @@ class StrategyEngine(BaseAppEngine):
             for strategy in strategy_list:
                 strategy.onFinish(finish)
 
-    def load_strategy(self, trade):
-        pass
+    def load_strategy(self):
+        strategy = SimulateStrategy(self)
+        self.__strategyDict[strategy.strategyName] = strategy
+
+    def init_strategy(self, strategy_name):
+        strategy = self.__strategyDict[strategy_name]
+        strategy.on_init()
+
+    def start_strategy(self, strategy_name):
+        strategy = self.__strategyDict[strategy_name]
+        strategy.on_start()
+
+    def stop_strategy(self, strategy_name):
+        strategy = self.__strategyDict[strategy_name]
+        strategy.on_stop()
+
+    def remove_strategy(self, strategy_name):
+        if strategy_name in self.__strategyDict:
+            del self.__strategyDict[strategy_name]
+        else:
+            pass
+
+    def init_all(self):
+        for strategy_name in self.__strategyDict.keys():
+            self.init_strategy(strategy_name)
+
+    def start_all(self):
+        for strategy_name in self.__strategyDict.keys():
+            self.start_strategy(strategy_name)
+
+    def stop_all(self):
+        for strategy_name in self.__strategyDict.keys():
+            self.stop_strategy(strategy_name)
+
+    def clear(self):
+        self.__strategyDict.clear()
 
     def send_order(self, order_req):
         pass

@@ -1,7 +1,9 @@
-class BaseStrategy(object):
-    def __init__(self, strategy_engine, strategy_name):
-        self.strategyName = strategy_name
-        self.__strategyEngine = strategy_engine
+from .baseStrategy import BaseStrategy
+
+
+class SimulateStrategy(BaseStrategy):
+    def __init__(self, strategy_engine, strategy_name='SimulateStrategy'):
+        super(SimulateStrategy, self).__init__(strategy_engine, strategy_name)
 
     def on_init(self):
         pass
